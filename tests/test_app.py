@@ -1,5 +1,10 @@
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from app import app  # Adjust this import based on how your Flask application is structured
+
 import pytest
-from app import app
 
 @pytest.fixture
 def client():
