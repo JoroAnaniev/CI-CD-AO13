@@ -1,4 +1,3 @@
-# .github/workflows/ci-cd.yml
 name: CI/CD
 
 on:
@@ -41,8 +40,20 @@ jobs:
 
     - name: Build Docker image
       run: |
-        docker build -t my-flask-app .
+        docker build -t flask-app .
 
     - name: Run Docker container
+      id: run_container
       run: |
-        docker run -d -p 80:80 my-flask-app
+        docker run -d -p 80:80 --name flask-app-ao13 flask-app
+
+    - name: Get container IP address
+      run: |
+        container_id=$(docker ps -qf "name=flask-app-ao13")
+        container_ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $container_id)
+        echo "Container IP Address: $container_ip"
+        echo "::set-output name=container_ip::$container_ip"
+
+    - name: Print container IP
+      run: |
+        echo "The Flask app is running at http://$container_ip:80"
