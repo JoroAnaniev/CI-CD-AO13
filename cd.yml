@@ -38,49 +38,20 @@ jobs:
     - name: Check out repository
       uses: actions/checkout@v2
 
-    - name: Build Docker image
-      run: |
-        docker build -t flask-app-ao13 .
-        docker build -t my-flask-app-container .
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
 
-    - name: Stop and remove any existing container (flask-app-ao13)
+    - name: Install dependencies
       run: |
-        if [ $(docker ps -a -q -f name=flask-app-ao13) ]; then
-          docker stop flask-app-ao13
-          docker rm flask-app-ao13
-        fi
+        python -m venv venv
+        source venv/bin/activate
+        pip install -r requirements.txt
 
-    - name: Stop and remove any existing container (my-flask-app-container)
+    - name: Run Flask app
       run: |
-        if [ $(docker ps -a -q -f name=my-flask-app-container) ]; then
-          docker stop my-flask-app-container
-          docker rm my-flask-app-container
-        fi
-
-    - name: Run Docker container (flask-app-ao13)
-      run: |
-        docker run -d -p 80:5000 --name flask-app-ao13 flask-app-ao13
-
-    - name: Run Docker container (my-flask-app-container)
-      run: |
-        docker run -d -p 80:5000 --name my-flask-app-container my-flask-app-container
-
-    - name: Get container IP address (flask-app-ao13)
-      id: get_flask_app_ao13_ip
-      run: |
-        container_ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' flask-app-ao13)
-        echo "container_ip=$container_ip" >> $GITHUB_ENV
-
-    - name: Get container IP address (my-flask-app-container)
-      id: get_my_flask_app_container_ip
-      run: |
-        container_ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' my-flask-app-container)
-        echo "container_ip=$container_ip" >> $GITHUB_ENV
-
-    - name: Print container IP (flask-app-ao13)
-      run: |
-        echo "The Flask app (flask-app-ao13) is running at http://$container_ip:80"
-
-    - name: Print container IP (my-flask-app-container)
-      run: |
-        echo "The Flask app (my-flask-app-container) is running at http://$container_ip:80"
+        source venv/bin/activate
+        nohup python app.py &
+        sleep 10 # Give the server time to start
+        curl http://127.0.0.1:5000 # Make a request to ensure the server is running
